@@ -328,11 +328,15 @@ const combinations = [
 
         function drag(e) {
             e.preventDefault();
-            const touchLocation = e.targetTouches ? e.targetTouches[0] : e;
-            draggingElement.style.position = 'fixed';
-            draggingElement.style.left = touchLocation.clientX - 25 + 'px';
-            draggingElement.style.top = touchLocation.clientY - 25 + 'px';
-            document.body.appendChild(draggingElement);
+            if (draggingElement) {
+                const touchLocation = e.targetTouches ? e.targetTouches[0] : e;
+                draggingElement.style.position = 'fixed';
+                draggingElement.style.left = (touchLocation.clientX - 25) + 'px';
+                draggingElement.style.top = (touchLocation.clientY - 25) + 'px';
+                if (!draggingElement.parentNode) {
+                    document.body.appendChild(draggingElement);
+                }
+            }
         }
 
         function drop(e) {
@@ -342,63 +346,79 @@ const combinations = [
             document.removeEventListener('touchmove', drag);
             document.removeEventListener('touchend', drop);
 
-            const touchLocation = e.changedTouches ? e.changedTouches[0] : e;
-            const synthesisArea = document.getElementById('synthesis');
-            const synthesisRect = synthesisArea.getBoundingClientRect();
+            if (draggingElement) {
+                const touchLocation = e.changedTouches ? e.changedTouches[0] : e;
+                const synthesisArea = document.getElementById('synthesis');
+                const synthesisRect = synthesisArea.getBoundingClientRect();
 
-            if (touchLocation.clientX >= synthesisRect.left && 
-                touchLocation.clientX <= synthesisRect.right && 
-                touchLocation.clientY >= synthesisRect.top && 
-                touchLocation.clientY <= synthesisRect.bottom) {
-                
-                const newParticle = createParticle({
-                    id: draggingElement.getAttribute('data-id'),
-                    name: draggingElement.getAttribute('data-name'),
-                    emoji: draggingElement.querySelector(':not(.particle-name)').textContent
-                });
-                synthesisArea.appendChild(newParticle);
-                checkCombination();
+                if (touchLocation.clientX >= synthesisRect.left && 
+                    touchLocation.clientX <= synthesisRect.right && 
+                    touchLocation.clientY >= synthesisRect.top && 
+                    touchLocation.clientY <= synthesisRect.bottom) {
+
+                    const newParticle = createParticle({
+                        id: draggingElement.getAttribute('data-id'),
+                        name: draggingElement.getAttribute('data-name'),
+                        emoji: draggingElement.innerHTML.split('<')[0] // Get the emoji
+                    });
+
+                    synthesisArea.appendChild(newParticle);
+                    checkCombination();
+                }
+
+                if (draggingElement.parentNode) {
+                    draggingElement.parentNode.removeChild(draggingElement);
+                }
             }
 
-            if (draggingElement.parentNode) {
-                draggingElement.parentNode.removeChild(draggingElement);
-            }
             draggingElement = null;
             document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
         }
-
         function checkCombination() {
             const synthesisArea = document.getElementById('synthesis');
             const currentIds = Array.from(synthesisArea.children).map(child => child.getAttribute('data-id'));
-            
+
+            console.log("Current elements in synthesis area:", currentIds);
+
+            // Count occurrences of each element
+            const elementCounts = currentIds.reduce((acc, id) => {
+                acc[id] = (acc[id] || 0) + 1;
+                return acc;
+            }, {});
+
             const matchedCombination = combinations.find(combo => 
                 combo.ingredients.every(ingredient => 
-                    currentIds.filter(id => id === ingredient).length >= 
+                    (elementCounts[ingredient] || 0) >= 
                     combo.ingredients.filter(i => i === ingredient).length
-                ) && currentIds.length === combo.ingredients.length
+                ) && combo.ingredients.length === currentIds.length
             );
 
             if (matchedCombination) {
+                console.log("Matched combination:", matchedCombination);
                 const newElement = particles.find(p => p.id === matchedCombination.result);
-                
+
                 const discoveredArea = document.getElementById('discovered');
+                const inventoryArea = document.getElementById('inventory');
+
                 if (!Array.from(discoveredArea.children).some(child => child.getAttribute('data-id') === newElement.id)) {
                     discoveredArea.appendChild(createParticle(newElement));
-                    // Add the new element to the inventory as well
-                    document.getElementById('inventory').appendChild(createParticle(newElement));
+                    inventoryArea.appendChild(createParticle(newElement));
+                    console.log("New element discovered:", newElement.name);
                 }
-                
+
                 synthesisArea.innerHTML = '';
                 showAlert(`OMG! 😱 You just created a ${newElement.name}! ${newElement.emoji} That's fire! 🔥`);
-            } else if (synthesisArea.children.length >= 3) {
-                // Check if the current combination can never produce a successful combo
-                const canNeverProduce = !combinations.some(combo => 
+            } else if (currentIds.length >= 2) {
+                console.log("No match found, checking if combination is possible");
+                // Check if the current combination can potentially produce a successful combo
+                const canPotentiallyProduce = combinations.some(combo => 
                     combo.ingredients.every(ingredient => 
-                        currentIds.includes(ingredient)
+                        (elementCounts[ingredient] || 0) > 0
                     ) && combo.ingredients.length >= currentIds.length
                 );
 
-                if (canNeverProduce) {
+                if (!canPotentiallyProduce) {
+                    console.log("Combination can never produce a result, clearing synthesis area");
                     synthesisArea.innerHTML = '';
                     showAlert("Oops! These vibes don't mix. Try something else! 🙈");
                 }
