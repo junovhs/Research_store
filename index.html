@@ -1,0 +1,443 @@
+<html><head><base href="https://websim.ai/subatomic-synthesizer"><meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔬 Atomic Vibes Mixer 🧪</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+
+        * {
+            cursor: none;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Fredoka One', cursive;
+            background-color: #000;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            background-image: 
+                radial-gradient(#ff00ff 1px, transparent 1px),
+                radial-gradient(#00ffff 1px, transparent 1px);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+            overflow-x: hidden;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #fff;
+            text-shadow: 3px 3px 0 #ff00ff, -3px -3px 0 #00ffff;
+            letter-spacing: 2px;
+        }
+        .game-area {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .container {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 5px solid #ff00ff;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 30px;
+            min-height: 180px;
+            box-shadow: 0 0 20px #00ffff, inset 0 0 30px rgba(255, 0, 255, 0.5);
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        #synthesis {
+            min-height: 280px;
+            transition: all 0.3s ease;
+            border-color: #00ffff;
+        }
+        #synthesis.hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 30px #ff00ff, inset 0 0 40px rgba(255, 0, 255, 0.7);
+        }
+        .particle {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            cursor: none;
+            position: relative;
+            transition: all 0.3s ease;
+            overflow: visible;
+            font-size: 24px;
+            margin: 5px;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .particle::before,
+        .particle::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            animation: sparkle 2s infinite alternate;
+        }
+        .particle::before {
+            background: radial-gradient(circle, #ff00ff 10%, transparent 70%);
+            animation-delay: -1s;
+        }
+        .particle::after {
+            background: radial-gradient(circle, #00ffff 10%, transparent 70%);
+        }
+        @keyframes sparkle {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.3;
+            }
+            100% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
+        }
+        .particle-name {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            white-space: nowrap;
+            color: #fff;
+            text-shadow: 
+                1px 1px 0 #000, -1px -1px 0 #000, 
+                1px -1px 0 #000, -1px 1px 0 #000;
+            z-index: 2;
+        }
+        .particle:hover {
+            transform: scale(1.15) rotate(15deg);
+        }
+        .particle.dragging {
+            opacity: 0.7;
+        }
+        #alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #000;
+            border: 5px solid #ff00ff;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 30px #00ffff, inset 0 0 40px rgba(255, 0, 255, 0.5);
+            display: none;
+            font-size: 18px;
+            text-align: center;
+            z-index: 1000;
+        }
+        #alert button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #ff00ff;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            cursor: none;
+            font-family: 'Fredoka One', cursive;
+            font-size: 18px;
+            box-shadow: 0 0 15px #ff00ff;
+            transition: all 0.3s ease;
+        }
+        #alert button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 25px #ff00ff;
+        }
+        #cursor {
+            width: 30px;
+            height: 30px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="15" r="13" fill="%23ff00ff" stroke="%2300ffff" stroke-width="4"/></svg>');
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+        }
+        .trail {
+            width: 10px;
+            height: 10px;
+            background-color: #ff00ff;
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            transition: 0.1s;
+            z-index: 9998;
+        }
+    </style>
+</head>
+<body>
+    <div id="cursor"></div>
+    <div class="game-area">
+        <h1>🔬 Atomic Vibes Mixer 🧪</h1>
+        
+        <h2>✨ Particle Stash ✨</h2>
+        <div id="inventory" class="container"></div>
+        
+        <h2>🔮 Vibe Check Zone 🔮</h2>
+        <div id="synthesis" class="container"></div>
+        
+        <h2>🏆 Atomic Trophies 🏆</h2>
+        <div id="discovered" class="container"></div>
+    </div>
+
+    <div id="alert">
+        <p id="alert-message"></p>
+        <button onclick="closeAlert()">SLAY! 💅</button>
+    </div>
+
+    <script>
+        const particles = [
+    // Tier 1: Subatomic
+    { id: 'up-quark', name: 'Up Quark', emoji: '🔼' },
+    { id: 'down-quark', name: 'Down Quark', emoji: '🔽' },
+    { id: 'electron', name: 'Electron', emoji: '⚡' },
+    { id: 'proton', name: 'Proton', emoji: '➕' },
+    { id: 'neutron', name: 'Neutron', emoji: '⚪' },
+
+    // Tier 2: Atomic
+    { id: 'hydrogen', name: 'Hydrogen', emoji: '💧' },
+    { id: 'water', name: 'Water', emoji: '🌊' },
+    { id: 'fire', name: 'Fire', emoji: '🔥' },
+    { id: 'earth', name: 'Earth', emoji: '🌎' },
+    { id: 'air', name: 'Air', emoji: '💨' },
+
+    // Tier 3: Elemental
+    { id: 'seed', name: 'Seed', emoji: '🌱' },
+    { id: 'tree', name: 'Tree', emoji: '🌳' },
+    { id: 'rock', name: 'Rock', emoji: '🪨' },
+    { id: 'metal', name: 'Metal', emoji: '🔧' },
+    { id: 'wood', name: 'Wood', emoji: '🪵' },
+
+    // Tier 4: Advanced
+    { id: 'animal', name: 'Animal', emoji: '🐾' },
+    { id: 'plant', name: 'Plant', emoji: '🌿' },
+    { id: 'bacteria', name: 'Bacteria', emoji: '🦠' },
+    { id: 'fungus', name: 'Fungus', emoji: '🍄' },
+
+    // Tier 5: Conceptual
+    { id: 'time', name: 'Time', emoji: '⏳' },
+    { id: 'energy', name: 'Energy', emoji: '⚡' },
+    { id: 'light', name: 'Light', emoji: '💡' },
+    { id: 'darkness', name: 'Darkness', emoji: '🌑' },
+    { id: 'heat', name: 'Heat', emoji: '🌡️' },
+    { id: 'cold', name: 'Cold', emoji: '❄️' },
+    { id: 'pressure', name: 'Pressure', emoji: '🗜️' },
+    { id: 'electricity', name: 'Electricity', emoji: '⚡' },
+    { id: 'magnetism', name: 'Magnetism', emoji: '🧲' },
+
+    // Tier 6: Complex
+    { id: 'crystal', name: 'Crystal', emoji: '💎' },
+    { id: 'sand', name: 'Sand', emoji: '🏖️' },
+    { id: 'clay', name: 'Clay', emoji: '🏺' },
+    { id: 'lava', name: 'Lava', emoji: '🌋' },
+    { id: 'ice', name: 'Ice', emoji: '🧊' },
+    { id: 'steam', name: 'Steam', emoji: '♨️' },
+    { id: 'cloud', name: 'Cloud', emoji: '☁️' },
+    { id: 'wind', name: 'Wind', emoji: '🌬️' },
+    { id: 'plasma', name: 'Plasma', emoji: '🔆' },
+    { id: 'void', name: 'Void', emoji: '⚫' }
+];
+
+const combinations = [
+    // Tier 1: Subatomic
+    { ingredients: ['up-quark', 'up-quark', 'down-quark'], result: 'proton' },
+    { ingredients: ['up-quark', 'down-quark', 'down-quark'], result: 'neutron' },
+    { ingredients: ['proton', 'electron'], result: 'hydrogen' },
+
+    // Tier 2: Atomic
+    { ingredients: ['hydrogen', 'hydrogen'], result: 'water' },
+    { ingredients: ['proton', 'neutron', 'electron'], result: 'fire' },
+    { ingredients: ['proton', 'neutron', 'neutron'], result: 'earth' },
+    { ingredients: ['electron', 'electron'], result: 'air' },
+
+    // Tier 3: Elemental
+    { ingredients: ['water', 'earth'], result: 'seed' },
+    { ingredients: ['seed', 'water', 'earth'], result: 'tree' },
+    { ingredients: ['earth', 'pressure'], result: 'rock' },
+    { ingredients: ['rock', 'fire'], result: 'metal' },
+    { ingredients: ['tree', 'time'], result: 'wood' },
+
+    // Tier 4: Advanced
+    { ingredients: ['water', 'earth', 'fire', 'air'], result: 'animal' },
+    { ingredients: ['seed', 'water', 'earth', 'light'], result: 'plant' },
+    { ingredients: ['water', 'plant'], result: 'bacteria' },
+    { ingredients: ['plant', 'darkness', 'water', 'air'], result: 'fungus' },
+
+    // Tier 5: Conceptual
+    { ingredients: ['light', 'darkness'], result: 'time' },
+    { ingredients: ['fire', 'air'], result: 'energy' },
+    { ingredients: ['energy', 'void'], result: 'light' },
+    { ingredients: ['void', 'light'], result: 'darkness' },
+    { ingredients: ['fire', 'energy'], result: 'heat' },
+    { ingredients: ['water', 'air'], result: 'cold' },
+    { ingredients: ['earth', 'air'], result: 'pressure' },
+    { ingredients: ['energy', 'metal'], result: 'electricity' },
+    { ingredients: ['metal', 'electricity'], result: 'magnetism' },
+
+    // Tier 6: Complex
+    { ingredients: ['rock', 'pressure', 'heat'], result: 'crystal' },
+    { ingredients: ['rock', 'water', 'wind'], result: 'sand' },
+    { ingredients: ['earth', 'water'], result: 'clay' },
+    { ingredients: ['rock', 'heat', 'pressure'], result: 'lava' },
+    { ingredients: ['water', 'cold'], result: 'ice' },
+    { ingredients: ['water', 'heat'], result: 'steam' },
+    { ingredients: ['water', 'air', 'cold'], result: 'cloud' },
+    { ingredients: ['air', 'pressure'], result: 'wind' },
+    { ingredients: ['fire', 'electricity', 'magnetism'], result: 'plasma' },
+    { ingredients: ['darkness', 'cold', 'pressure'], result: 'void' }
+];
+
+        let draggingElement = null;
+
+        function createParticle(particle) {
+            const elem = document.createElement('div');
+            elem.className = 'particle';
+            elem.innerHTML = particle.emoji;
+            elem.setAttribute('draggable', true);
+            elem.setAttribute('data-id', particle.id);
+            elem.setAttribute('data-name', particle.name);
+            
+            const nameElem = document.createElement('div');
+            nameElem.className = 'particle-name';
+            nameElem.textContent = particle.name;
+            elem.appendChild(nameElem);
+            
+            elem.addEventListener('mousedown', dragStart);
+            elem.addEventListener('touchstart', dragStart, { passive: false });
+            
+            return elem;
+        }
+
+        function dragStart(e) {
+            e.preventDefault();
+            draggingElement = this.cloneNode(true);
+            this.classList.add('dragging');
+
+            if (e.type === 'touchstart') {
+                document.addEventListener('touchmove', drag, { passive: false });
+                document.addEventListener('touchend', drop);
+            } else {
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('mouseup', drop);
+            }
+        }
+
+        function drag(e) {
+            e.preventDefault();
+            const touchLocation = e.targetTouches ? e.targetTouches[0] : e;
+            draggingElement.style.position = 'fixed';
+            draggingElement.style.left = touchLocation.clientX - 25 + 'px';
+            draggingElement.style.top = touchLocation.clientY - 25 + 'px';
+            document.body.appendChild(draggingElement);
+        }
+
+        function drop(e) {
+            e.preventDefault();
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', drop);
+            document.removeEventListener('touchmove', drag);
+            document.removeEventListener('touchend', drop);
+
+            const touchLocation = e.changedTouches ? e.changedTouches[0] : e;
+            const synthesisArea = document.getElementById('synthesis');
+            const synthesisRect = synthesisArea.getBoundingClientRect();
+
+            if (touchLocation.clientX >= synthesisRect.left && 
+                touchLocation.clientX <= synthesisRect.right && 
+                touchLocation.clientY >= synthesisRect.top && 
+                touchLocation.clientY <= synthesisRect.bottom) {
+                
+                const newParticle = createParticle({
+                    id: draggingElement.getAttribute('data-id'),
+                    name: draggingElement.getAttribute('data-name'),
+                    emoji: draggingElement.querySelector(':not(.particle-name)').textContent
+                });
+                synthesisArea.appendChild(newParticle);
+                checkCombination();
+            }
+
+            if (draggingElement.parentNode) {
+                draggingElement.parentNode.removeChild(draggingElement);
+            }
+            draggingElement = null;
+            document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+        }
+
+        function checkCombination() {
+            const synthesisArea = document.getElementById('synthesis');
+            const currentIds = Array.from(synthesisArea.children).map(child => child.getAttribute('data-id'));
+            
+            const matchedCombination = combinations.find(combo => 
+                combo.ingredients.every(ingredient => 
+                    currentIds.filter(id => id === ingredient).length >= 
+                    combo.ingredients.filter(i => i === ingredient).length
+                ) && currentIds.length === combo.ingredients.length
+            );
+
+            if (matchedCombination) {
+                const newElement = particles.find(p => p.id === matchedCombination.result);
+                
+                const discoveredArea = document.getElementById('discovered');
+                if (!Array.from(discoveredArea.children).some(child => child.getAttribute('data-id') === newElement.id)) {
+                    discoveredArea.appendChild(createParticle(newElement));
+                }
+                
+                synthesisArea.innerHTML = '';
+                showAlert(`OMG! 😱 You just created a ${newElement.name}! ${newElement.emoji} That's fire! 🔥`);
+            } else if (synthesisArea.children.length >= 3) {
+                synthesisArea.innerHTML = '';
+            }
+        }
+
+        function showAlert(message) {
+            const alert = document.getElementById('alert');
+            document.getElementById('alert-message').textContent = message;
+            alert.style.display = 'block';
+        }
+
+        function closeAlert() {
+            document.getElementById('alert').style.display = 'none';
+        }
+
+        // Cursor and trail effects
+        const cursor = document.getElementById('cursor');
+        const trailContainer = document.createElement('div');
+        document.body.appendChild(trailContainer);
+
+        let trails = [];
+
+        document.addEventListener('mousemove', e => {
+            cursor.style.left = e.clientX - 15 + 'px';
+            cursor.style.top = e.clientY - 15 + 'px';
+
+            const trail = document.createElement('div');
+            trail.className = 'trail';
+            trail.style.left = e.clientX - 5 + 'px';
+            trail.style.top = e.clientY - 5 + 'px';
+            trailContainer.appendChild(trail);
+            trails.push(trail);
+
+            if (trails.length > 20) {
+                const oldTrail = trails.shift();
+                trailContainer.removeChild(oldTrail);
+            }
+
+            setTimeout(() => {
+                trail.style.opacity = '0';
+            }, 50);
+        });
+
+        // Initialize the game
+        window.onload = function() {
+            const inventory = document.getElementById('inventory');
+            particles.forEach(particle => {
+                inventory.appendChild(createParticle(particle));
+            });
+        };
+    </script>
+</body>
+</html>
