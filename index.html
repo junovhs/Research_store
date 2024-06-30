@@ -384,18 +384,30 @@ const combinations = [
                 const discoveredArea = document.getElementById('discovered');
                 if (!Array.from(discoveredArea.children).some(child => child.getAttribute('data-id') === newElement.id)) {
                     discoveredArea.appendChild(createParticle(newElement));
+                    // Add the new element to the inventory as well
+                    document.getElementById('inventory').appendChild(createParticle(newElement));
                 }
                 
                 synthesisArea.innerHTML = '';
                 showAlert(`OMG! 😱 You just created a ${newElement.name}! ${newElement.emoji} That's fire! 🔥`);
             } else if (synthesisArea.children.length >= 3) {
-                synthesisArea.innerHTML = '';
+                // Check if the current combination can never produce a successful combo
+                const canNeverProduce = !combinations.some(combo => 
+                    combo.ingredients.every(ingredient => 
+                        currentIds.includes(ingredient)
+                    ) && combo.ingredients.length >= currentIds.length
+                );
+
+                if (canNeverProduce) {
+                    synthesisArea.innerHTML = '';
+                    showAlert("Oops! These vibes don't mix. Try something else! 🙈");
+                }
             }
         }
 
         function showAlert(message) {
             const alert = document.getElementById('alert');
-            document.getElementById('alert-message').textContent = message;
+            document.getElementById('alert-message').innerHTML = message; // Changed to innerHTML to support emojis
             alert.style.display = 'block';
         }
 
