@@ -1,0 +1,1311 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Painterly Palette Tool</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+      color: #333;
+    }
+    h1, h2, h3 {
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    h2 {
+      margin-top: 0;
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: normal;
+      margin-bottom: 30px;
+      color: #666;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .panel {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .panel-header {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: #444;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .control-column {
+      flex: 1;
+      min-width: 280px;
+    }
+    .control-group {
+      margin-bottom: 15px;
+    }
+    .control-group h4 {
+      margin-top: 0;
+      margin-bottom: 8px;
+      font-size: 1rem;
+      color: #555;
+    }
+    label {
+      display: inline-block;
+      width: 160px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    input[type="range"] {
+      width: 180px;
+      vertical-align: middle;
+    }
+    input[type="range"]+span {
+      display: inline-block;
+      width: 35px;
+      text-align: right;
+      margin-left: 8px;
+    }
+    select {
+      padding: 5px 10px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      background: white;
+      margin-left: 10px;
+    }
+    button {
+      background: #4a6da7;
+      color: white;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #3a5d97;
+    }
+    button.secondary {
+      background: #888;
+    }
+    button.secondary:hover {
+      background: #777;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .toggle-btn {
+      background: #f0f0f0;
+      color: #333;
+      border: 1px solid #ddd;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .toggle-btn:hover {
+      background: #e5e5e5;
+    }
+    .toggle-btn.active {
+      background: #4a6da7;
+      color: white;
+      border-color: #3a5d97;
+    }
+    #main-display {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+    .canvas-container {
+      position: relative;
+    }
+    canvas {
+      display: block;
+      border-radius: 4px;
+      box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+      background: white;
+    }
+    .canvas-label {
+      text-align: center;
+      margin-top: 10px;
+      font-weight: 500;
+      color: #555;
+    }
+    #paletteDisplay {
+      padding: 20px;
+      margin-top: 5px;
+    }
+    .palette-organization {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+    .palette-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .palette-group-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: #444;
+    }
+    .palette-group-swatches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+    #paletteSwatches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .swatch-container {
+      position: relative;
+      margin-bottom: 15px;
+    }
+    .swatch {
+      width: 60px;
+      height: 60px;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      border: 1px solid rgba(0,0,0,0.1);
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.2s;
+    }
+    .swatch:hover {
+      transform: scale(1.05);
+    }
+    .swatch-active {
+      transform: scale(1.1);
+      box-shadow: 0 3px 12px rgba(74, 109, 167, 0.4);
+      border: 2px solid #4a6da7;
+    }
+    .swatch-info {
+      position: absolute;
+      bottom: 5px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.8rem;
+      color: #666;
+    }
+    .swatch-label {
+      font-size: 0.85rem;
+      text-align: center;
+      margin-top: 5px;
+      color: #666;
+    }
+    .color-edit {
+      position: fixed;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+      z-index: 100;
+      width: 300px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: none;
+    }
+    .color-edit h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+    }
+    .color-edit-controls {
+      margin-bottom: 15px;
+    }
+    .color-edit-buttons {
+      display: flex;
+      justify-content: space-between;
+    }
+    .color-picker {
+      margin-bottom: 15px;
+    }
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 99;
+      display: none;
+    }
+    .viewMode-group {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .viewMode-btn {
+      background: #f0f0f0;
+      color: #333;
+      border: 1px solid #ddd;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .viewMode-btn.active {
+      background: #4a6da7;
+      color: white;
+      border-color: #3a5d97;
+    }
+    #color-wheel {
+      width: 180px;
+      height: 180px;
+      background-image: conic-gradient(
+        red, yellow, lime, aqua, blue, magenta, red
+      );
+      border-radius: 50%;
+      margin: 0 auto 15px;
+      position: relative;
+      border: 1px solid #ddd;
+    }
+    #harmony-markers {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .harmony-marker {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: white;
+      border: 2px solid black;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .palette-info {
+      border-top: 1px solid #eee;
+      padding-top: 15px;
+      margin-top: 15px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    .brush-preview {
+      display: flex;
+      justify-content: center;
+      margin-top: 15px;
+    }
+    .brush-stroke {
+      width: 80px;
+      height: 30px;
+      margin: 0 -10px;
+      border-radius: 15px;
+      box-shadow: inset 0 -3px 5px rgba(0,0,0,0.2);
+    }
+    .loading {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255,255,255,0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      font-weight: bold;
+      color: #333;
+      display: none;
+    }
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+      .controls {
+        flex-direction: column;
+      }
+      input[type="range"] {
+        width: 150px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Painterly Palette Tool</h1>
+    <h2>Analyze and interpret images like a traditional painter</h2>
+    
+    <!-- Panel 1: Image Selection -->
+    <div class="panel">
+      <div class="panel-header">1. Select Image</div>
+      <div class="control-group">
+        <label for="imageLoader">Upload Your Image:</label>
+        <input type="file" id="imageLoader" accept="image/*">
+      </div>
+    </div>
+    
+    <!-- Panel 2: Palette Settings -->
+    <div class="panel">
+      <div class="panel-header">2. Choose Palette Settings</div>
+      <div class="controls">
+        <div class="control-column">
+          <div class="control-group">
+            <h4>Color Extraction</h4>
+            <label for="colorCount">Colors in Palette:</label>
+            <input type="range" id="colorCount" min="3" max="32" value="8">
+            <span id="colorCountLabel">8</span>
+          </div>
+          <div class="control-group">
+            <h4>Detail Level</h4>
+            <label for="detailLevel">Posterization Detail:</label>
+            <input type="range" id="detailLevel" min="10" max="1000" value="100">
+            <span id="detailLevelLabel">100</span>
+          </div>
+          <div class="control-group">
+            <h4>Color Character</h4>
+            <div class="button-group">
+              <button class="toggle-btn" id="toggleWarm">Warmer</button>
+              <button class="toggle-btn" id="toggleCool">Cooler</button>
+              <button class="toggle-btn" id="toggleVibrant">More Vibrant</button>
+              <button class="toggle-btn" id="toggleMuted">More Muted</button>
+            </div>
+          </div>
+        </div>
+        <div class="control-column">
+          <div class="control-group">
+            <h4>Color Harmony</h4>
+            <label for="harmonyMode">Harmony Type:</label>
+            <select id="harmonyMode">
+              <option value="none">Natural (No Harmony)</option>
+              <option value="complementary">Complementary</option>
+              <option value="analogous">Analogous</option>
+              <option value="split">Split Complementary</option>
+              <option value="triadic">Triadic</option>
+              <option value="tetradic">Tetradic</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <h4>Value Adjustment</h4>
+            <div class="button-group">
+              <button class="toggle-btn" id="toggleHighContrast">Higher Contrast</button>
+              <button class="toggle-btn" id="toggleLowContrast">Lower Contrast</button>
+              <button class="toggle-btn" id="toggleDarker">Darker</button>
+              <button class="toggle-btn" id="toggleLighter">Lighter</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <h4>Process Image</h4>
+            <button id="processButton">Analyze &amp; Generate Palette</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Main Display: Original & Posterized Canvases -->
+    <div id="main-display">
+      <div class="canvas-container">
+        <canvas id="originalCanvas"></canvas>
+        <div class="canvas-label">Original Image</div>
+        <div class="loading" id="originalLoading">Loading image...</div>
+      </div>
+      <div class="canvas-container">
+        <canvas id="posterizedCanvas"></canvas>
+        <div class="canvas-label">Interpreted Image</div>
+        <div class="loading" id="processingLoading">Processing...</div>
+      </div>
+    </div>
+    
+    <!-- Palette Display -->
+    <div class="panel" id="paletteDisplay" style="display: none;">
+      <div class="panel-header">3. Your Painter's Palette</div>
+      
+      <div class="viewMode-group">
+        <button class="viewMode-btn active" id="viewNormal">Normal View</button>
+        <button class="viewMode-btn" id="viewValue">Value Study</button>
+        <button class="viewMode-btn" id="viewEdges">Edge Study</button>
+      </div>
+      
+      <div class="palette-organization">
+        <div class="palette-group">
+          <div class="palette-group-title">Primary Colors</div>
+          <div class="palette-group-swatches" id="primarySwatches"></div>
+        </div>
+        <div class="palette-group">
+          <div class="palette-group-title">Secondary Colors</div>
+          <div class="palette-group-swatches" id="secondarySwatches"></div>
+        </div>
+        <div class="palette-group">
+          <div class="palette-group-title">All Palette Colors</div>
+          <div id="paletteSwatches"></div>
+        </div>
+      </div>
+      
+      <div id="color-wheel">
+        <div id="harmony-markers"></div>
+      </div>
+      
+      <div class="palette-info">
+        <p id="paletteStats">Primary colors: 0 warm, 0 cool • Value range: 0% - 0%</p>
+      </div>
+      
+      <div class="brush-preview" id="brushPreview"></div>
+      
+      <div class="button-group" style="justify-content: center; margin-top: 20px;">
+        <button id="downloadPalette">Download Palette (PNG)</button>
+        <button id="resetPalette" class="secondary">Reset Palette</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Color Edit Modal -->
+  <div id="overlay"></div>
+  <div class="color-edit" id="colorEdit">
+    <h3>Edit Color</h3>
+    <div class="color-edit-controls">
+      <div class="color-picker">
+        <input type="color" id="colorPicker">
+      </div>
+      <div class="control-group">
+        <label for="editHue">Hue:</label>
+        <input type="range" id="editHue" min="0" max="360" value="0">
+        <span id="editHueLabel">0</span>
+      </div>
+      <div class="control-group">
+        <label for="editSaturation">Saturation:</label>
+        <input type="range" id="editSaturation" min="0" max="100" value="0">
+        <span id="editSaturationLabel">0</span>
+      </div>
+      <div class="control-group">
+        <label for="editLightness">Lightness:</label>
+        <input type="range" id="editLightness" min="0" max="100" value="0">
+        <span id="editLightnessLabel">0</span>
+      </div>
+    </div>
+    <div class="color-edit-buttons">
+      <button id="applyColor">Apply</button>
+      <button id="cancelEdit" class="secondary">Cancel</button>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+  <script>
+    /* ============================
+       Color Space Conversion Functions
+       ============================ */
+    function rgbToXyz(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      r = (r > 0.04045) ? Math.pow((r + 0.055)/1.055, 2.4) : (r/12.92);
+      g = (g > 0.04045) ? Math.pow((g + 0.055)/1.055, 2.4) : (g/12.92);
+      b = (b > 0.04045) ? Math.pow((b + 0.055)/1.055, 2.4) : (b/12.92);
+      let x = r * 0.4124 + g * 0.3576 + b * 0.1805;
+      let y = r * 0.2126 + g * 0.7152 + b * 0.0722;
+      let z = r * 0.0193 + g * 0.1192 + b * 0.9505;
+      return [x*100, y*100, z*100];
+    }
+    function xyzToLab(x, y, z) {
+      const refX = 95.047, refY = 100.0, refZ = 108.883;
+      let X = x / refX, Y = y / refY, Z = z / refZ;
+      X = (X > 0.008856) ? Math.cbrt(X) : (7.787 * X) + (16/116);
+      Y = (Y > 0.008856) ? Math.cbrt(Y) : (7.787 * Y) + (16/116);
+      Z = (Z > 0.008856) ? Math.cbrt(Z) : (7.787 * Z) + (16/116);
+      let L = (116 * Y) - 16;
+      let a = 500 * (X - Y);
+      let b = 200 * (Y - Z);
+      return [L, a, b];
+    }
+    function rgbToLab(r, g, b) {
+      const [x, y, z] = rgbToXyz(r, g, b);
+      return xyzToLab(x, y, z);
+    }
+    function labToXyz(L, a, b) {
+      const refX = 95.047, refY = 100.0, refZ = 108.883;
+      let y = (L + 16) / 116;
+      let x = a/500 + y;
+      let z = y - b/200;
+      let x3 = Math.pow(x,3), y3 = Math.pow(y,3), z3 = Math.pow(z,3);
+      x = (x3 > 0.008856) ? x3 : (x - 16/116) / 7.787;
+      y = (y3 > 0.008856) ? y3 : (y - 16/116) / 7.787;
+      z = (z3 > 0.008856) ? z3 : (z - 16/116) / 7.787;
+      return [x * refX, y * refY, z * refZ];
+    }
+    function xyzToRgb(x, y, z) {
+      x /= 100; y /= 100; z /= 100;
+      let r = x * 3.2406 + y * -1.5372 + z * -0.4986;
+      let g = x * -0.9689 + y * 1.8758 + z * 0.0415;
+      let b = x * 0.0557 + y * -0.2040 + z * 1.0570;
+      r = (r > 0.0031308) ? (1.055 * Math.pow(r, 1/2.4) - 0.055) : (12.92 * r);
+      g = (g > 0.0031308) ? (1.055 * Math.pow(g, 1/2.4) - 0.055) : (12.92 * g);
+      b = (b > 0.0031308) ? (1.055 * Math.pow(b, 1/2.4) - 0.055) : (12.92 * b);
+      return [Math.min(Math.max(0, r*255),255), Math.min(Math.max(0, g*255),255), Math.min(Math.max(0, b*255),255)];
+    }
+    function labToRgb(L, a, b) {
+      const [x, y, z] = labToXyz(L, a, b);
+      return xyzToRgb(x, y, z);
+    }
+    function rgbToHsl(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+      if(max === min) { h = s = 0; }
+      else {
+        const d = max - min;
+        s = l > 0.5 ? d/(2-max-min) : d/(max+min);
+        switch(max){
+          case r: h = (g-b)/d + (g<b ? 6 : 0); break;
+          case g: h = (b-r)/d + 2; break;
+          case b: h = (r-g)/d + 4; break;
+        }
+        h /= 6;
+      }
+      return [h, s, l];
+    }
+    function hslToRgb(h, s, l) {
+      let r, g, b;
+      if(s === 0) { r = g = b = l; }
+      else {
+        const hue2rgb = function(p, q, t) {
+          if(t < 0) t += 1;
+          if(t > 1) t -= 1;
+          if(t < 1/6) return p + (q-p)*6*t;
+          if(t < 1/2) return q;
+          if(t < 2/3) return p + (q-p)*(2/3-t)*6;
+          return p;
+        };
+        const q = l < 0.5 ? l*(1+s) : l+s - l*s;
+        const p = 2*l - q;
+        r = hue2rgb(p,q,h+1/3);
+        g = hue2rgb(p,q,h);
+        b = hue2rgb(p,q,h-1/3);
+      }
+      return [Math.round(r*255), Math.round(g*255), Math.round(b*255)];
+    }
+
+    /* ============================
+       Perceptual Color Functions
+       ============================ */
+    function computeLabWeight(L, a, b) {
+      const chroma = Math.sqrt(a*a + b*b);
+      const brightnessFactor = (Math.abs(L-50)/50) + 1;
+      return 1 + (chroma/128)*brightnessFactor;
+    }
+    function labDistance(lab1, lab2) {
+      const dL = lab1[0]-lab2[0],
+            da = lab1[1]-lab2[1],
+            db = lab1[2]-lab2[2];
+      return Math.sqrt(dL*dL+da*da+db*db);
+    }
+
+    /* ============================
+       Palette Manipulation Functions
+       ============================ */
+    // Apply color harmony to a palette (expects palette as array of RGB)
+    function applyColorHarmony(palette, harmonyType) {
+      if(harmonyType === 'none') return palette;
+      const labPalette = palette.map(rgb => rgbToLab(rgb[0], rgb[1], rgb[2]));
+      let dominantIdx = 0, maxChroma = 0;
+      for(let i = 0; i < labPalette.length; i++) {
+        const [L, a, b] = labPalette[i];
+        const chroma = Math.sqrt(a*a + b*b);
+        if(chroma > maxChroma) { maxChroma = chroma; dominantIdx = i; }
+      }
+      const result = [...labPalette];
+      const [L_dom, a_dom, b_dom] = labPalette[dominantIdx];
+      const hue = Math.atan2(b_dom, a_dom);
+      switch(harmonyType) {
+        case 'complementary':
+          for(let i = 0; i < result.length; i++) {
+            if(i !== dominantIdx && Math.random() > 0.5) {
+              const complementHue = hue + Math.PI;
+              const chroma = Math.sqrt(result[i][1]*result[i][1] + result[i][2]*result[i][2]);
+              result[i][1] = Math.cos(complementHue) * chroma;
+              result[i][2] = Math.sin(complementHue) * chroma;
+            }
+          }
+          break;
+        case 'analogous':
+          for(let i = 0; i < result.length; i++) {
+            const chroma = Math.sqrt(result[i][1]*result[i][1] + result[i][2]*result[i][2]);
+            const currentHue = Math.atan2(result[i][2], result[i][1]);
+            const shift = (Math.random()-0.5) * (Math.PI/6);
+            const newHue = currentHue + shift;
+            result[i][1] = chroma * Math.cos(newHue);
+            result[i][2] = chroma * Math.sin(newHue);
+          }
+          break;
+        case 'split':
+          for(let i = 0; i < result.length; i++) {
+            if(i !== dominantIdx && Math.random() > 0.3) {
+              const splitShift = (Math.random() > 0.5) ? Math.PI + Math.PI/6 : Math.PI - Math.PI/6;
+              const newHue = hue + splitShift;
+              const chroma = Math.sqrt(result[i][1]*result[i][1] + result[i][2]*result[i][2]);
+              result[i][1] = Math.cos(newHue) * chroma;
+              result[i][2] = Math.sin(newHue) * chroma;
+            }
+          }
+          break;
+        case 'triadic':
+          for(let i = 0; i < result.length; i++) {
+            if(i !== dominantIdx && Math.random() > 0.3) {
+              const triadicShift = (Math.random() > 0.5) ? 2*Math.PI/3 : 4*Math.PI/3;
+              const newHue = hue + triadicShift;
+              const chroma = Math.sqrt(result[i][1]*result[i][1] + result[i][2]*result[i][2]);
+              result[i][1] = Math.cos(newHue) * chroma;
+              result[i][2] = Math.sin(newHue) * chroma;
+            }
+          }
+          break;
+        case 'tetradic':
+          for(let i = 0; i < result.length; i++) {
+            if(i !== dominantIdx) {
+              const index = i % 3;
+              let shift = 0;
+              if(index === 0) shift = Math.PI/2;
+              else if(index === 1) shift = Math.PI;
+              else shift = 3 * Math.PI/2;
+              const newHue = hue + shift;
+              const chroma = Math.sqrt(result[i][1]*result[i][1] + result[i][2]*result[i][2]);
+              result[i][1] = Math.cos(newHue) * chroma;
+              result[i][2] = Math.sin(newHue) * chroma;
+            }
+          }
+          break;
+        default:
+          break;
+      }
+      return result.map(lab => labToRgb(lab[0], lab[1], lab[2]));
+    }
+    // Modify palette colors by character (expects palette as array of Lab arrays)
+    function modifyPalette(centroids, modification) {
+      return centroids.map(lab => {
+        let [L, a, b] = lab.slice();
+        switch(modification) {
+          case 'warmer':
+            a += 5; b += 3;
+            break;
+          case 'cooler':
+            a -= 5; b -= 3;
+            break;
+          case 'vibrant': {
+            let chroma = Math.sqrt(a*a + b*b);
+            let hue = Math.atan2(b, a);
+            chroma *= 1.2;
+            a = chroma * Math.cos(hue);
+            b = chroma * Math.sin(hue);
+            break;
+          }
+          case 'muted': {
+            let chroma = Math.sqrt(a*a + b*b);
+            let hue = Math.atan2(b, a);
+            chroma *= 0.8;
+            a = chroma * Math.cos(hue);
+            b = chroma * Math.sin(hue);
+            break;
+          }
+          default:
+            break;
+        }
+        return [L, a, b];
+      });
+    }
+    // Adjust value (L channel) in Lab palette based on adjustment type
+    function adjustValue(palette, adjustment) {
+      return palette.map(lab => {
+        let [L, a, b] = lab.slice();
+        switch(adjustment) {
+          case 'highContrast':
+            L = (L < 50) ? L * 0.9 : L + (100 - L)*0.1;
+            break;
+          case 'lowContrast':
+            L = 50 + (L - 50)*0.8;
+            break;
+          case 'darker':
+            L = Math.max(0, L - 10);
+            break;
+          case 'lighter':
+            L = Math.min(100, L + 10);
+            break;
+          default:
+            break;
+        }
+        return [L, a, b];
+      });
+    }
+
+    /* ============================
+       Global Variables & UI Elements
+       ============================ */
+    let loadedImage = null;
+    let originalImageAspectRatio = 1;
+    const imageLoader = document.getElementById("imageLoader");
+    const originalCanvas = document.getElementById("originalCanvas");
+    const posterizedCanvas = document.getElementById("posterizedCanvas");
+    const originalCtx = originalCanvas.getContext("2d");
+    const posterizedCtx = posterizedCanvas.getContext("2d");
+    const processButton = document.getElementById("processButton");
+    const colorCountInput = document.getElementById("colorCount");
+    const colorCountLabel = document.getElementById("colorCountLabel");
+    const detailLevelInput = document.getElementById("detailLevel");
+    const detailLevelLabel = document.getElementById("detailLevelLabel");
+    const harmonyModeSelect = document.getElementById("harmonyMode");
+    const paletteSwatches = document.getElementById("paletteSwatches");
+    const primarySwatches = document.getElementById("primarySwatches");
+    const secondarySwatches = document.getElementById("secondarySwatches");
+    const paletteStats = document.getElementById("paletteStats");
+    const brushPreview = document.getElementById("brushPreview");
+    const originalLoading = document.getElementById("originalLoading");
+    const processingLoading = document.getElementById("processingLoading");
+    const downloadPaletteBtn = document.getElementById("downloadPalette");
+    const resetPaletteBtn = document.getElementById("resetPalette");
+    const viewNormalBtn = document.getElementById("viewNormal");
+    const viewValueBtn = document.getElementById("viewValue");
+    const viewEdgesBtn = document.getElementById("viewEdges");
+    
+    // Add view mode event listeners
+    viewNormalBtn.addEventListener("click", () => updateViewMode("normal"));
+    viewValueBtn.addEventListener("click", () => updateViewMode("value"));
+    viewEdgesBtn.addEventListener("click", () => updateViewMode("edges"));
+    
+    // Global settings for modifications (default: no modification)
+    const modificationSettings = {
+      character: null, // 'warmer', 'cooler', 'vibrant', 'muted'
+      value: null      // 'highContrast', 'lowContrast', 'darker', 'lighter'
+    };
+    
+    /* ============================
+       Event Listeners for UI Controls
+       ============================ */
+    colorCountInput.addEventListener("input", () => {
+      colorCountLabel.textContent = colorCountInput.value;
+    });
+    detailLevelInput.addEventListener("input", () => {
+      detailLevelLabel.textContent = detailLevelInput.value;
+    });
+    // Toggle buttons: add or remove active class and update settings
+    [document.getElementById("toggleWarm"), document.getElementById("toggleCool"), document.getElementById("toggleVibrant"), document.getElementById("toggleMuted")].forEach(btn => {
+      btn.addEventListener("click", () => {
+        // Only one character modification active at a time
+        [document.getElementById("toggleWarm"), document.getElementById("toggleCool"), document.getElementById("toggleVibrant"), document.getElementById("toggleMuted")].forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        modificationSettings.character = btn.id.replace("toggle", "").toLowerCase();
+      });
+    });
+    [document.getElementById("toggleHighContrast"), document.getElementById("toggleLowContrast"), document.getElementById("toggleDarker"), document.getElementById("toggleLighter")].forEach(btn => {
+      btn.addEventListener("click", () => {
+        // Only one value adjustment active at a time
+        [document.getElementById("toggleHighContrast"), document.getElementById("toggleLowContrast"), document.getElementById("toggleDarker"), document.getElementById("toggleLighter")].forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        modificationSettings.value = btn.id.replace("toggle", "").toLowerCase();
+      });
+    });
+    
+    imageLoader.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if(!file) return;
+      originalLoading.style.display = "flex";
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          loadedImage = img;
+          originalImageAspectRatio = img.width / img.height;
+          
+          // Set canvas sizes to maintain aspect ratio
+          let canvasWidth, canvasHeight;
+          if (originalImageAspectRatio > 1) {
+            canvasWidth = 400;
+            canvasHeight = 400 / originalImageAspectRatio;
+          } else {
+            canvasHeight = 400;
+            canvasWidth = 400 * originalImageAspectRatio;
+          }
+          
+          originalCanvas.width = canvasWidth;
+          originalCanvas.height = canvasHeight;
+          posterizedCanvas.width = canvasWidth;
+          posterizedCanvas.height = canvasHeight;
+          
+          originalCtx.clearRect(0, 0, originalCanvas.width, originalCanvas.height);
+          posterizedCtx.clearRect(0, 0, posterizedCanvas.width, posterizedCanvas.height);
+          originalCtx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+          originalLoading.style.display = "none";
+        }
+        img.src = event.target.result;
+      }
+      reader.readAsDataURL(file);
+    });
+    
+    processButton.addEventListener("click", () => processImage(true));
+    downloadPaletteBtn.addEventListener("click", downloadPalette);
+    
+    /* ============================
+       Main Processing Function
+       ============================ */
+    function processImage(recalculatePalette = true) {
+      if(!loadedImage) { alert("Please upload an image first."); return; }
+      processingLoading.style.display = "flex";
+      setTimeout(() => {
+        const width = originalCanvas.width, height = originalCanvas.height;
+        const imageData = originalCtx.getImageData(0, 0, width, height);
+        const data = imageData.data;
+        
+        if (recalculatePalette) {
+          const sampleRate = Math.max(1, Math.floor(1000 / parseInt(detailLevelInput.value)));
+          const pixelsLab = [];
+          const weights = [];
+          const pixelsRGB = [];
+          const pixelPositions = []; // Store pixel positions for neighbor analysis
+          
+          // Extract pixels and compute initial weights
+          for(let y = 0; y < height; y += sampleRate) {
+            for(let x = 0; x < width; x += sampleRate) {
+              const i = (y * width + x) * 4;
+              if (i < data.length) {
+                const r = data[i], g = data[i+1], b = data[i+2];
+                pixelsRGB.push([r, g, b]);
+                const lab = rgbToLab(r, g, b);
+                pixelsLab.push(lab);
+                pixelPositions.push([x, y]);
+                weights.push(computeLabWeight(lab[0], lab[1], lab[2]));
+              }
+            }
+          }
+          
+          // Enhance weights based on neighborhood contrast
+          for(let i = 0; i < pixelsLab.length; i++) {
+            const [x, y] = pixelPositions[i];
+            const contrastImportance = computePixelImportance(pixelsLab[i], pixelsLab, width, height, x, y);
+            weights[i] *= contrastImportance;
+          }
+          
+          const k = parseInt(colorCountInput.value);
+          const { centroids, clusters } = kMeansLab(pixelsLab, weights, k, 20);
+          let modCentroids = centroids;
+          if(modificationSettings.character)
+            modCentroids = modifyPalette(modCentroids, modificationSettings.character);
+          if(modificationSettings.value)
+            modCentroids = adjustValue(modCentroids, modificationSettings.value);
+            
+          // Apply harmony if requested
+          let paletteRGB = modCentroids.map(lab => labToRgb(lab[0], lab[1], lab[2]));
+          const harmonyType = harmonyModeSelect.value;
+          paletteRGB = applyColorHarmony(paletteRGB, harmonyType);
+          
+          // Store the current palette
+          currentPalette = paletteRGB;
+          
+          // Update color wheel with harmony markers
+          updateColorWheel(paletteRGB, harmonyType);
+        }
+        
+        // Remap each pixel to the nearest color in the palette
+        const newImageData = posterizedCtx.createImageData(width, height);
+        for(let y = 0; y < height; y++) {
+          for(let x = 0; x < width; x++) {
+            const i = (y * width + x) * 4;
+            if (i < data.length) {
+              const r = data[i], g = data[i+1], b = data[i+2];
+              const labPixel = rgbToLab(r, g, b);
+              
+              let bestIdx = 0, minDist = Infinity;
+              for(let j = 0; j < currentPalette.length; j++) {
+                const labPalette = rgbToLab(
+                  currentPalette[j][0], 
+                  currentPalette[j][1], 
+                  currentPalette[j][2]
+                );
+                const d = labDistance(labPixel, labPalette);
+                if(d < minDist) { minDist = d; bestIdx = j; }
+              }
+              
+              const col = currentPalette[bestIdx];
+              newImageData.data[i] = col[0];
+              newImageData.data[i+1] = col[1];
+              newImageData.data[i+2] = col[2];
+              newImageData.data[i+3] = 255;
+            } else {
+              newImageData.data[i+3] = 0;
+            }
+          }
+        }
+        
+        posterizedCtx.putImageData(newImageData, 0, 0);
+        updatePaletteUI(currentPalette);
+        processingLoading.style.display = "none";
+      }, 100);
+    }
+    
+    /* ============================
+       k-Means Clustering in Lab Space (Weighted)
+       ============================ */
+    function kMeansLab(pixelsLab, weights, k, maxIter = 20) {
+      const centroids = [];
+      for(let i = 0; i < k; i++) {
+        const idx = Math.floor(Math.random() * pixelsLab.length);
+        centroids.push(pixelsLab[idx].slice());
+      }
+      let clusters = new Array(pixelsLab.length).fill(0);
+      for(let iter = 0; iter < maxIter; iter++) {
+        for(let i = 0; i < pixelsLab.length; i++) {
+          let minDist = Infinity, best = 0;
+          for(let j = 0; j < k; j++) {
+            const dL = pixelsLab[i][0] - centroids[j][0];
+            const da = pixelsLab[i][1] - centroids[j][1];
+            const db = pixelsLab[i][2] - centroids[j][2];
+            const d = Math.sqrt(dL*dL + da*da + db*db);
+            if(d < minDist) { minDist = d; best = j; }
+          }
+          clusters[i] = best;
+        }
+        const sums = Array(k).fill(null).map(() => [0,0,0,0]);
+        for(let i = 0; i < pixelsLab.length; i++) {
+          const clusterIndex = clusters[i];
+          sums[clusterIndex][0] += pixelsLab[i][0] * weights[i];
+          sums[clusterIndex][1] += pixelsLab[i][1] * weights[i];
+          sums[clusterIndex][2] += pixelsLab[i][2] * weights[i];
+          sums[clusterIndex][3] += weights[i];
+        }
+        for(let j = 0; j < k; j++) {
+          if(sums[j][3] === 0) continue;
+          centroids[j] = [
+            sums[j][0] / sums[j][3],
+            sums[j][1] / sums[j][3],
+            sums[j][2] / sums[j][3]
+          ];
+        }
+      }
+      return { centroids, clusters };
+    }
+    
+    /* ============================
+       Update Palette UI
+       ============================ */
+    function updatePaletteUI(paletteRGB) {
+      paletteSwatches.innerHTML = "";
+      primarySwatches.innerHTML = "";
+      secondarySwatches.innerHTML = "";
+      
+      let warmCount = 0, coolCount = 0, minL = 100, maxL = 0;
+      
+      // Sort colors by importance (chroma and lightness)
+      const colorsSorted = paletteRGB.map((rgb, idx) => {
+        const lab = rgbToLab(rgb[0], rgb[1], rgb[2]);
+        const [h, s, l] = rgbToHsl(rgb[0], rgb[1], rgb[2]);
+        const chroma = Math.sqrt(lab[1]*lab[1] + lab[2]*lab[2]);
+        const importance = chroma * (0.5 + 0.5 * Math.abs(lab[0] - 50) / 50);
+        return { rgb, lab, hsl: [h, s, l], importance, idx };
+      }).sort((a, b) => b.importance - a.importance);
+      
+      // Determine primary and secondary colors
+      const primaryColors = colorsSorted.slice(0, Math.ceil(colorsSorted.length / 3));
+      const secondaryColors = colorsSorted.slice(Math.ceil(colorsSorted.length / 3));
+      
+      // Create swatches for all colors
+      colorsSorted.forEach(({ rgb, lab, hsl, idx }) => {
+        createSwatch(rgb, lab, hsl, paletteSwatches);
+        
+        if (lab[0] < minL) minL = lab[0];
+        if (lab[0] > maxL) maxL = lab[0];
+        (getColorTemperature(lab[1], lab[2]) === 'warm') ? warmCount++ : coolCount++;
+      });
+      
+      // Create primary and secondary color sections
+      primaryColors.forEach(({ rgb, lab, hsl }) => {
+        createSwatch(rgb, lab, hsl, primarySwatches);
+      });
+      
+      secondaryColors.forEach(({ rgb, lab, hsl }) => {
+        createSwatch(rgb, lab, hsl, secondarySwatches);
+      });
+      
+      paletteStats.textContent = `Primary colors: ${warmCount} warm, ${coolCount} cool • Value range: ${Math.round(minL)}% - ${Math.round(maxL)}%`;
+      
+      // Update brush preview (simulate brush strokes with palette colors)
+      brushPreview.innerHTML = "";
+      paletteRGB.forEach(col => {
+        const stroke = document.createElement("div");
+        stroke.className = "brush-stroke";
+        stroke.style.backgroundColor = `rgb(${Math.round(col[0])}, ${Math.round(col[1])}, ${Math.round(col[2])})`;
+        brushPreview.appendChild(stroke);
+      });
+      
+      document.getElementById("paletteDisplay").style.display = "block";
+    }
+    
+    function createSwatch(rgb, lab, hsl, container) {
+      const swatchContainer = document.createElement("div");
+      swatchContainer.className = "swatch-container";
+      
+      const swatch = document.createElement("div");
+      swatch.className = "swatch";
+      swatch.style.backgroundColor = `rgb(${Math.round(rgb[0])}, ${Math.round(rgb[1])}, ${Math.round(rgb[2])})`;
+      swatch.title = getColorName(lab[0], lab[1], lab[2]);
+      
+      // Add color info tooltip
+      const swatchInfo = document.createElement("div");
+      swatchInfo.className = "swatch-info";
+      const hex = rgbToHex(Math.round(rgb[0]), Math.round(rgb[1]), Math.round(rgb[2]));
+      swatchInfo.textContent = `#${hex}`;
+      swatch.appendChild(swatchInfo);
+      
+      swatch.addEventListener("click", () => {
+        // Open color edit dialog or select color
+        // Implementation can be added here
+        swatch.classList.toggle("swatch-selected");
+      });
+      
+      swatchContainer.appendChild(swatch);
+      container.appendChild(swatchContainer);
+    }
+    
+    /* ============================
+       Color Wheel Harmony Visualization
+       ============================ */
+    function updateColorWheel(paletteRGB, harmonyType) {
+      const harmonyMarkers = document.getElementById("harmony-markers");
+      harmonyMarkers.innerHTML = "";
+      
+      paletteRGB.forEach((rgb, i) => {
+        const [h, s, l] = rgbToHsl(rgb[0], rgb[1], rgb[2]);
+        if (s > 0.1) { // Only show colors with some saturation
+          const angle = h * 360;
+          const radius = 90 * s; // Scale by saturation
+          
+          const x = 90 + Math.cos((angle - 90) * Math.PI / 180) * radius;
+          const y = 90 + Math.sin((angle - 90) * Math.PI / 180) * radius;
+          
+          const marker = document.createElement("div");
+          marker.className = "harmony-marker";
+          marker.style.left = `${x}px`;
+          marker.style.top = `${y}px`;
+          marker.style.backgroundColor = `rgb(${Math.round(rgb[0])}, ${Math.round(rgb[1])}, ${Math.round(rgb[2])})`;
+          marker.style.borderColor = l > 0.5 ? "#000" : "#fff";
+          
+          harmonyMarkers.appendChild(marker);
+        }
+      });
+    }
+    
+    /* ============================
+       Download and Reset Palette
+       ============================ */
+    function downloadPalette() {
+      // Create a canvas for the palette image
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const swatchSize = 100;
+      const padding = 20;
+      const textHeight = 60;
+      const width = currentPalette.length * (swatchSize + padding) + padding;
+      const height = swatchSize + padding * 2 + textHeight;
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      // Fill background
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, width, height);
+      
+      // Draw each color with values
+      ctx.font = "12px Arial";
+      ctx.textAlign = "center";
+      
+      for (let i = 0; i < currentPalette.length; i++) {
+        const x = padding + i * (swatchSize + padding);
+        const y = padding;
+        const col = currentPalette[i];
+        
+        // Draw swatch
+        ctx.fillStyle = `rgb(${Math.round(col[0])}, ${Math.round(col[1])}, ${Math.round(col[2])})`;
+        ctx.fillRect(x, y, swatchSize, swatchSize);
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, swatchSize, swatchSize);
+        
+        // Add color values
+        const r = Math.round(col[0]);
+        const g = Math.round(col[1]);
+        const b = Math.round(col[2]);
+        const hex = rgbToHex(r, g, b);
+        const hsl = rgbToHsl(r, g, b);
+        const h = Math.round(hsl[0] * 360);
+        const s = Math.round(hsl[1] * 100);
+        const l = Math.round(hsl[2] * 100);
+        
+        // Choose text color based on background brightness
+        ctx.fillStyle = l < 50 ? "#ffffff" : "#000000";
+        
+        // Add values
+        ctx.fillText(`#${hex}`, x + swatchSize/2, y + swatchSize + 15);
+        ctx.fillText(`RGB: ${r}, ${g}, ${b}`, x + swatchSize/2, y + swatchSize + 30);
+        ctx.fillText(`HSL: ${h}°, ${s}%, ${l}%`, x + swatchSize/2, y + swatchSize + 45);
+      }
+      
+      // Download the image
+      const link = document.createElement("a");
+      link.download = "palette.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      
+      // Also generate code formats
+      generatePaletteCode();
+    }
+    
+    function generatePaletteCode() {
+      let cssCode = "/* CSS Variables */\n:root {\n";
+      let scssCode = "// SCSS Variables\n";
+      let jsonCode = "{\n  \"palette\": [\n";
+      
+      currentPalette.forEach((col, i) => {
+        const r = Math.round(col[0]);
+        const g = Math.round(col[1]);
+        const b = Math.round(col[2]);
+        const hex = rgbToHex(r, g, b);
+        
+        cssCode += `  --color-${i+1}: #${hex};\n`;
+        scssCode += `$color-${i+1}: #${hex};\n`;
+        jsonCode += `    {"name": "color-${i+1}", "hex": "#${hex}", "rgb": [${r}, ${g}, ${b}]}`;
+        if (i < currentPalette.length - 1) jsonCode += ",";
+        jsonCode += "\n";
+      });
+      
+      cssCode += "}\n";
+      jsonCode += "  ]\n}";
+      
+      // Create and download a text file with the code
+      const blob = new Blob([
+        "/* Palette Code Export */\n\n" + 
+        cssCode + "\n\n" + 
+        scssCode + "\n\n" + 
+        jsonCode
+      ], {type: 'text/plain'});
+      
+      const link = document.createElement("a");
+      link.download = "palette-code.txt";
+      link.href = URL.createObjectURL(blob);
+      link.click();
+    }
+    
+    function rgbToHex(r, g, b) {
+      return ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+    
+    function updateViewMode(mode) {
+      // Update UI
+      document.querySelectorAll('.viewMode-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.id === 'view' + mode.charAt(0).toUpperCase() + mode.slice(1));
+      });
+      
+      // Apply appropriate filter to canvas
+      const canvas = document.getElementById('posterizedCanvas');
+      const ctx = canvas.getContext('2d');
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      
+      switch(mode) {
+        case 'value':
+          // Convert to grayscale for value study
+          for (let i = 0; i < data.length; i += 4) {
+            const avg = Math.round(0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2]);
+            data[i] = data[i+1] = data[i+2] = avg;
+          }
+          break;
+        case 'edges':
+          // Simple edge detection
+          const tempData = new Uint8ClampedArray(data);
+          const width = canvas.width;
+          for (let y = 1; y < canvas.height - 1; y++) {
+            for (let x = 1; x < width - 1; x++) {
+              const idx = (y * width + x) * 4;
+              // Sobel operator (simplified)
+              const gx = 
+                -1 * tempData[idx - 4 - width * 4] + 
+                1 * tempData[idx + 4 - width * 4] +
+                -2 * tempData[idx - 4] + 
+                2 * tempData[idx + 4] +
+                -1 * tempData[idx - 4 + width * 4] + 
+                1 * tempData[idx + 4 + width * 4];
+              
+              const gy = 
+                -1 * tempData[idx - 4 - width * 4] + 
+                -2 * tempData[idx - width * 4] +
+                -1 * tempData[idx + 4 - width * 4] +
+                1 * tempData[idx - 4 + width * 4] + 
+                2 * tempData[idx + width * 4] +
+                1 * tempData[idx + 4 + width * 4];
+              
+              const magnitude = Math.sqrt(gx * gx + gy * gy);
+              const edge = magnitude > 50 ? 0 : 255; // Threshold
+              data[idx] = data[idx+1] = data[idx+2] = edge;
+            }
+          }
+          break;
+        case 'normal':
+        default:
+          // Restore original colors - no change needed as we'll redraw the canvas
+          processImage(false); // false means don't recalculate palette, just redraw
+          return;
+      }
+      
+      ctx.putImageData(imageData, 0, 0);
+    }
+    
+    resetPaletteBtn.addEventListener("click", () => {
+      window.location.reload();
+    });
+    
+    /* ============================
+       Simple Helpers for Naming & Temperature
+       ============================ */
+    function getColorTemperature(a, b) {
+      return (a > 0) ? 'warm' : 'cool';
+    }
+    function getColorName(L, a, b) {
+      const [r, g, b_val] = labToRgb(L, a, b);
+      const [h, s, l] = rgbToHsl(r, g, b_val);
+      let name = '';
+      const hue = h * 360;
+      if(l < 0.15) return 'Black';
+      if(l > 0.85) return 'White';
+      if(s < 0.15) {
+        if(l < 0.3) return 'Dark Gray';
+        if(l > 0.7) return 'Light Gray';
+        return 'Gray';
+      }
+      if(hue < 30) name = 'Red';
+      else if(hue < 60) name = 'Orange';
+      else if(hue < 90) name = 'Yellow';
+      else if(hue < 150) name = 'Green';
+      else if(hue < 210) name = 'Cyan';
+      else if(hue < 270) name = 'Blue';
+      else if(hue < 330) name = 'Purple';
+      else name = 'Red';
+      if(l < 0.3) name = 'Dark ' + name;
+      else if(l > 0.7) name = 'Light ' + name;
+      return name;
+    }
+  </script>
+</body>
+</html>
